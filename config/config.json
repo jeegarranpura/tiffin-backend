@@ -1,23 +1,23 @@
 {
   "development": {
     "username": "postgres",
-    "password": "your_password",
+    "password": "Aegis@123",
     "database": "tifin_test",
-    "host": "127.0.0.1",
+    "host": "69.16.216.13",
     "dialect": "postgres"
   },
   "test": {
     "username": "root",
     "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "database": "tifin_test",
+    "host": "69.16.216.13",
+    "dialect": "postgres"
   },
   "production": {
     "username": "root",
     "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "database": "tifin_test",
+    "host": "69.16.216.13",
+    "dialect": "postgres"
   }
 }
