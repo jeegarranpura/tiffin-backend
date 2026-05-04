@@ -10,7 +10,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
     cors: {
-        origin: ['http://localhost:5173', 'http://192.168.1.72:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'https://tiffin-backend-9q25.onrender.com'],
+        origin: ['http://localhost:5173', 'http://192.168.1.72:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'https://tiffin-admin-z9yl.onrender.com/'],
         methods: ['GET', 'POST'],
         credentials: true
     }
