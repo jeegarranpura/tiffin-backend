@@ -19,7 +19,7 @@ const socketHandler = require('./utils/socketHandler');
 
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://192.168.1.72:5173', 'http://127.0.0.1:5173'],
+    origin: ['http://localhost:5173', 'http://192.168.1.72:5173', 'http://127.0.0.1:5173', 'https://tiffin-admin-z9yl.onrender.com'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
