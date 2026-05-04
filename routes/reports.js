@@ -104,7 +104,7 @@ router.get('/active-customers', async (req, res) => {
 router.get('/non-renewed-customers', async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Find all customers whose last subscription expired today or earlier
     // and don't have any subscription that starts today or later
     const customers = await Customer.findAll({
@@ -117,10 +117,10 @@ router.get('/non-renewed-customers', async (req, res) => {
     const nonRenewed = customers.filter(customer => {
       const subs = customer.Subscriptions || [];
       if (subs.length === 0) return false;
-      
-      const hasActiveOrFuture = subs.some(s => s.endDate >= today || s.status === 'active');
+
+      const hasActiveOrFuture = subs.some(s => s.endDate >= today && s.status === 'active');
       const hasExpired = subs.some(s => s.endDate < today);
-      
+
       return hasExpired && !hasActiveOrFuture;
     });
 

@@ -41,6 +41,8 @@ const subscriptionRoutes = require('./routes/subscriptions');
 const users = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
 const reminderRoutes = require('./routes/reminders');
+const { generateDailyOrders } = require('./utils/orderGenerator');
+const { updateSubscriptionStatus } = require('./utils/subscriptionService');
 
 
 
@@ -70,12 +72,48 @@ app.get('/', (req, res) => {
 // Initialize Socket.io Handler
 socketHandler(io);
 
+
+
+const date = new Date();
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const day = String(date.getDate()).padStart(2, '0');
+const formattedDate = `${year}-${month}-${day}`;
+generateDailyOrders(formattedDate)
+
+// Cron Job: Generate daily orders at 10:30 PM/
+cron.schedule('00 11 * * *', async () => {
+    console.log('Running daily order generation cron job at 10:30 PM');
+    try {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate() + 1).padStart(2, '0');
+        const tomorrow = `${year}-${month}-${day}`;
+        const result = await generateDailyOrders(tomorrow);
+        console.log(`Order generation completed. Created: ${result.createdCount}, Skipped: ${result.skippedCount}`);
+    } catch (error) {
+        console.error('Order generation cron job failed:', error);
+    }
+});
+
 // Cron Job: Payment Reminders at 11 AM daily
-cron.schedule('0 11 * * *', async () => {
+cron.schedule('00 11 * * *', async () => {
     console.log('Running daily payment reminder cron job at 11:00 AM');
     try {
         const results = await processPaymentReminders();
         console.log(`Cron job completed: ${results.length} reminders processed.`);
+    } catch (error) {
+        console.error('Cron job failed:', error);
+    }
+});
+
+// Cron Job: Subscription Status Update at 11 AM daily
+cron.schedule('00 11 * * *', async () => {
+    console.log('Running daily subscription status update cron job at 11:00 AM');
+    try {
+        const results = await updateSubscriptionStatus();
+        console.log(`Cron job completed: ${results.length} subscriptions updated.`);
     } catch (error) {
         console.error('Cron job failed:', error);
     }

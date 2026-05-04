@@ -25,7 +25,8 @@ const processPaymentReminders = async (useMailinator = true) => {
             const customer = sub.Customer;
             if (customer && customer.name) {
                 const testEmail = `${customer.name.replace(/\s/g, '') || 'user'}@mailinator.com`;
-                const emailToUse = useMailinator ? [testEmail, 'yashraj.aegis@gmail.com'] : customer.email;
+                const adminMails = process.env.ADMIN_MAILS ? process.env.ADMIN_MAILS.split(',').map(m => m.trim()) : [];
+                const emailToUse = useMailinator ? [testEmail, ...adminMails] : customer.email;
                 const amount = 500;
 
                 const html = getPaymentReminderTemplate(customer.name, sub.endDate, amount);

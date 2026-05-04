@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Route, Order, Delivery } = require('../models');
+const { Op } = require('sequelize');
 
 // Delivery Agent: Start Delivery
 router.post('/start/:routeId', async (req, res) => {

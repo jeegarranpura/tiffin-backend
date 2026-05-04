@@ -6,38 +6,38 @@ const { Op } = require('sequelize');
 router.get('/overview', async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // 1. Stats Summary
     const totalCustomers = await Customer.count();
     const activeSubscriptions = await Subscription.count({ where: { status: 'active' } });
     const todayDeliveries = await Order.count({ where: { orderDate: today } });
-    const pendingDeliveries = await Order.count({ 
-      where: { 
-        orderDate: today, 
-        status: 'pending' 
-      } 
+    const pendingDeliveries = await Order.count({
+      where: {
+        orderDate: today,
+        status: 'pending'
+      }
     });
 
     // 2. Recent Activity - Latest 10 orders with Customer details
     const recentActivity = await Order.findAll({
       limit: 10,
       order: [['createdAt', 'DESC']],
-      include: [{ model: Customer, attributes: ['name'] }]
+      include: [{ model: Customer, attributes: ['name', 'type'] }]
     });
 
     // Format recent activity for frontend
     const formattedActivity = recentActivity.map(order => ({
       customer: order.Customer ? order.Customer.name : 'Unknown',
-      activity: `${order.mealTime} ${order.type === 'trial' ? 'Trial' : 'Subscription'} Order`,
+      activity: `${order.mealTime} - ${order.Customer.type === 'trial' ? 'Trial' : 'Monthly'} Order`,
       status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
-      time: order.createdAt, // Frontend will handle "2 mins ago" formatting or I can do it here
+      time: order.createdAt,
       statusColor: getStatusColor(order.status)
     }));
 
     // 3. Delivery Trend (Last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    
+
     const deliveryTrendRows = await Order.findAll({
       attributes: [
         'orderDate',

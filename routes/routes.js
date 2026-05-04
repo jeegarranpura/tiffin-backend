@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Route, Customer, Order, User, Plan } = require('../models');
+const { Route, Customer, Order, User, Plan, Delivery, Subscription } = require('../models');
 const { Op } = require('sequelize');
 
 // Create a Route Manually
@@ -39,7 +39,10 @@ router.get('/', async (req, res) => {
           model: Order,
           where: orderWhere,
           required: ['admin', 'manager'].includes(req.user.role) ? false : true, // Only return routes that have orders for the specified date
-          include: [{ model: Customer, as: 'Customer', include: [Plan] }]
+          include: [
+            { model: Customer, as: 'Customer', include: [Plan] },
+            { model: Delivery }
+          ]
         },
         {
           model: User,
@@ -71,7 +74,7 @@ router.get('/:id', async (req, res) => {
           model: Order,
           where: orderWhere,
           required: false,
-          include: [Customer]
+          include: [Customer, Delivery]
         },
         {
           model: User,
@@ -129,7 +132,7 @@ router.get('/:id/map', async (req, res) => {
           model: Order,
           where: orderWhere,
           required: false,
-          include: [Customer]
+          include: [Customer, Delivery]
         },
         {
           model: User,
