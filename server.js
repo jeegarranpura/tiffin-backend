@@ -43,7 +43,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const reminderRoutes = require('./routes/reminders');
 const { generateDailyOrders } = require('./utils/orderGenerator');
 const { updateSubscriptionStatus } = require('./utils/subscriptionService');
-const { redis } = require('./utils/redisService');
+// const { redis } = require('./utils/redisService');
 
 
 

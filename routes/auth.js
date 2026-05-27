@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const { loginRateLimit } = require('../utils/rateLimitService');
+// const { loginRateLimit } = require('../utils/rateLimitService');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -22,7 +22,7 @@ router.post('/login', async (req, res) => {
     const { username, password, platform } = req.body;
     const user = await User.findOne({ where: { username } });
 
-    const rateLimitResult = await loginRateLimit.consume(req.ip);
+    // const rateLimitResult = await loginRateLimit.consume(req.ip);
 
 
     if (!user || !(await user.comparePassword(password))) {
