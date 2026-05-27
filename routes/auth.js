@@ -3,6 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
+const { loginRateLimit } = require('../utils/rateLimitService');
+
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
@@ -19,6 +21,9 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password, platform } = req.body;
     const user = await User.findOne({ where: { username } });
+
+    const rateLimitResult = await loginRateLimit.consume(req.ip);
+
 
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -49,7 +54,13 @@ router.post('/login', async (req, res) => {
       res.json({ token, refreshToken, user: { id: user.id, username: user.username, role: user.role } });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(429).json({
+        error: 'Too many login attempts. Please try after 15 minutes.'
+      })
+    }
   }
 });
 

@@ -48,9 +48,17 @@ router.get('/', async (req, res) => {
           model: User,
           as: 'agent',
           attributes: ['id', 'username']
+        },
+        {
+          model: Customer,
+          as: 'Customers',
+          include: [Plan, Subscription]
         }
       ],
-      order: [[Order, Customer, 'priority', 'ASC']]
+      order: [
+        [Order, Customer, 'priority', 'ASC'],
+        [{ model: Customer, as: 'Customers' }, 'priority', 'ASC']
+      ]
     });
     res.json(routes);
   } catch (error) {

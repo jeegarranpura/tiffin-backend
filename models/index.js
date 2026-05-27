@@ -20,6 +20,9 @@ Customer.hasMany(Order, { foreignKey: 'customerId' });
 Order.belongsTo(Route, { foreignKey: 'routeId' });
 Route.hasMany(Order, { foreignKey: 'routeId' });
 
+Customer.belongsTo(Route, { foreignKey: 'routeId' });
+Route.hasMany(Customer, { foreignKey: 'routeId', as: 'Customers' });
+
 Delivery.belongsTo(Order, { foreignKey: 'orderId' });
 Order.hasOne(Delivery, { foreignKey: 'orderId' });
 
@@ -42,6 +45,9 @@ Plan.hasMany(Subscription, { foreignKey: 'planId' });
 // SubscriptionSkip Associations
 Subscription.hasMany(SubscriptionSkip, { foreignKey: 'subscriptionId' });
 SubscriptionSkip.belongsTo(Subscription, { foreignKey: 'subscriptionId' });
+
+Customer.belongsTo(Route, { foreignKey: 'routeId' });
+Route.hasMany(Customer, { foreignKey: 'routeId' });
 
 module.exports = {
   sequelize,
