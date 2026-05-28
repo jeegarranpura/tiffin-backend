@@ -1,21 +1,32 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { Route, Customer, Order, User, Plan, Delivery, Subscription } = require('../models');
-const { Op } = require('sequelize');
+const {
+  Route,
+  Customer,
+  Order,
+  User,
+  Plan,
+  Delivery,
+  Subscription,
+} = require("../models");
+const { Op } = require("sequelize");
+const { sendNotification } = require("../utils/firebaseServices");
 
 // Create a Route Manually
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { name, description, type, assignedTo, customerIds } = req.body;
     const route = await Route.create({ name, description, type, assignedTo });
     if (customerIds && customerIds.length > 0) {
-      await Promise.all(customerIds.map(async (customerId, index) => {
-        const priority = index + 1;
-        await Customer.update(
-          { routeId: route.id, priority },
-          { where: { id: customerId } }
-        );
-      }));
+      await Promise.all(
+        customerIds.map(async (customerId, index) => {
+          const priority = index + 1;
+          await Customer.update(
+            { routeId: route.id, priority },
+            { where: { id: customerId } },
+          );
+        }),
+      );
     }
     res.status(201).json(route);
   } catch (error) {
@@ -24,11 +35,11 @@ router.post('/', async (req, res) => {
 });
 
 // Get all Routes with assigned orders for a specific date
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { date, mealTime } = req.query;
     // Default to today's date (YYYY-MM-DD)
-    const filterDate = date || new Date().toISOString().split('T')[0];
+    const filterDate = date || new Date().toISOString().split("T")[0];
 
     const orderWhere = { orderDate: filterDate };
     if (mealTime) orderWhere.mealTime = mealTime;
@@ -38,27 +49,27 @@ router.get('/', async (req, res) => {
         {
           model: Order,
           where: orderWhere,
-          required: ['admin', 'manager'].includes(req.user.role) ? false : true, // Only return routes that have orders for the specified date
+          required: ["admin", "manager"].includes(req.user.role) ? false : true, // Only return routes that have orders for the specified date
           include: [
-            { model: Customer, as: 'Customer', include: [Plan] },
-            { model: Delivery }
-          ]
+            { model: Customer, as: "Customer", include: [Plan] },
+            { model: Delivery },
+          ],
         },
         {
           model: User,
-          as: 'agent',
-          attributes: ['id', 'username']
+          as: "agent",
+          attributes: ["id", "username"],
         },
         {
           model: Customer,
-          as: 'Customers',
-          include: [Plan, Subscription]
-        }
+          as: "Customers",
+          include: [Plan, Subscription],
+        },
       ],
       order: [
-        [Order, Customer, 'priority', 'ASC'],
-        [{ model: Customer, as: 'Customers' }, 'priority', 'ASC']
-      ]
+        [Order, Customer, "priority", "ASC"],
+        [{ model: Customer, as: "Customers" }, "priority", "ASC"],
+      ],
     });
     res.json(routes);
   } catch (error) {
@@ -66,11 +77,11 @@ router.get('/', async (req, res) => {
   }
 });
 // Get single Route details for a specific date
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { date, mealTime } = req.query;
-    const filterDate = date || new Date().toISOString().split('T')[0];
+    const filterDate = date || new Date().toISOString().split("T")[0];
 
     const orderWhere = { orderDate: filterDate };
     if (mealTime) orderWhere.mealTime = mealTime;
@@ -82,15 +93,15 @@ router.get('/:id', async (req, res) => {
           model: Order,
           where: orderWhere,
           required: false,
-          include: [Customer, Delivery]
+          include: [Customer, Delivery],
         },
         {
           model: User,
-          as: 'agent',
-          attributes: ['id', 'username']
-        }
+          as: "agent",
+          attributes: ["id", "username"],
+        },
       ],
-      order: [[Order, Customer, 'priority', 'ASC']]
+      order: [[Order, Customer, "priority", "ASC"]],
     });
     res.json(route);
   } catch (error) {
@@ -99,21 +110,24 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update Route details
-router.put('/:id', async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
-    const { name, description, type, assignedTo, status, customerIds } = req.body;
+    const { name, description, type, assignedTo, status, customerIds } =
+      req.body;
     const route = await Route.findByPk(req.params.id);
-    if (!route) return res.status(404).json({ error: 'Route not found' });
+    if (!route) return res.status(404).json({ error: "Route not found" });
 
     await route.update({ name, description, type, assignedTo, status });
     if (customerIds && customerIds.length > 0) {
-      await Promise.all(customerIds.map(async (customerId, index) => {
-        const priority = index + 1;
-        await Customer.update(
-          { routeId: route.id, priority },
-          { where: { id: customerId } }
-        );
-      }));
+      await Promise.all(
+        customerIds.map(async (customerId, index) => {
+          const priority = index + 1;
+          await Customer.update(
+            { routeId: route.id, priority },
+            { where: { id: customerId } },
+          );
+        }),
+      );
     }
     res.json(route);
   } catch (error) {
@@ -122,15 +136,15 @@ router.put('/:id', async (req, res) => {
 });
 
 // Get Route details for Map (Filtered by Date and Ordered by Priority)
-router.get('/:id/map', async (req, res) => {
+router.get("/:id/map", async (req, res) => {
   try {
     const { id } = req.params;
     const { date, mealTime } = req.query;
-    const filterDate = date || new Date().toISOString().split('T')[0];
+    const filterDate = date || new Date().toISOString().split("T")[0];
 
     const orderWhere = {
-      status: { [Op.ne]: 'cancelled' },
-      orderDate: filterDate
+      status: { [Op.ne]: "cancelled" },
+      orderDate: filterDate,
     };
     if (mealTime) orderWhere.mealTime = mealTime;
 
@@ -140,43 +154,55 @@ router.get('/:id/map', async (req, res) => {
           model: Order,
           where: orderWhere,
           required: false,
-          include: [Customer, Delivery]
+          include: [Customer, Delivery],
         },
         {
           model: User,
-          as: 'agent',
-          attributes: ['id', 'username']
-        }
+          as: "agent",
+          attributes: ["id", "username"],
+        },
       ],
-      order: [[Order, Customer, 'priority', 'ASC']]
+      order: [[Order, Customer, "priority", "ASC"]],
     });
 
-    if (!route) return res.status(404).json({ error: 'Route not found' });
+    if (!route) return res.status(404).json({ error: "Route not found" });
     res.json(route);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const route = await Route.findByPk(id);
-    if (!route) return res.status(404).json({ error: 'Route not found' });
+    if (!route) return res.status(404).json({ error: "Route not found" });
     await route.destroy();
-    res.json({ message: 'Route deleted successfully' });
+    res.json({ message: "Route deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.put('/update-route-status/:id', async (req, res) => {
+router.put("/update-route-status/:id", async (req, res) => {
   try {
     const { status } = req.body;
-    const route = await Route.findByPk(req.params.id);
-    if (!route) return res.status(404).json({ error: 'Route not found' });
+    const route = await Route.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: "agent",
+        },
+      ],
+    });
+    if (!route) return res.status(404).json({ error: "Route not found" });
 
     await route.update({ status });
+
+    console.log("data", route?.agent.fmcToken);
+    if (route?.status === "ready" && route?.agent.fmcToken) {
+      sendNotification(route?.agent.fmcToken, route?.name, "Tiifin Route Is Ready for the Day!");
+    }
     res.json(route);
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -41,6 +41,8 @@ const subscriptionRoutes = require('./routes/subscriptions');
 const users = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
 const reminderRoutes = require('./routes/reminders');
+const firebaseRoute = require('./routes/firebaseRoute');
+
 const { generateDailyOrders } = require('./utils/orderGenerator');
 const { updateSubscriptionStatus } = require('./utils/subscriptionService');
 // const { redis } = require('./utils/redisService');
@@ -64,7 +66,7 @@ app.use('/api/subscriptions', authMiddleware, subscriptionRoutes);
 app.use('/api/users', authMiddleware, users);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 app.use('/api/reminders', authMiddleware, reminderRoutes);
-
+app.use('/api/firebase', authMiddleware, firebaseRoute);
 
 app.get('/', (req, res) => {
     res.send('Tiffin Delivery API is running...');
