@@ -1,5 +1,4 @@
 const admin = require("firebase-admin");
-const sconfig = require("../config/serviceConfig.json");
 
 if (process.env.FIREBASE_CONFIG) {
   admin.initializeApp({
