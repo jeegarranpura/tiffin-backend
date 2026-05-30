@@ -5,13 +5,13 @@ const { User } = require('../models');
 
 router.post('/updateToken', async (req, res) => {
     try {
-        const { fmcToken, userId } = req.body;
+        const { fcmToken, userId } = req.body;
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
         await user.update({
-            fmcToken: fmcToken
+            fcmToken: fcmToken
         });
         const { password, ...updatedUser } = user.toJSON();
         res.json(updatedUser);
