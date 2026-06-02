@@ -82,4 +82,40 @@ router.post('/refresh-token', async (req, res) => {
   }
 });
 
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email: email, role: ['admin', 'manager'] } });
+
+    if (!user) {
+      res.status(404).json({ message: "User Not Found!" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    await User.update({ otp }, { where: { email } });
+    res.send(200).json({
+      message: "Otp Generated Successfully",
+    });
+  } catch (eroor) {
+    res.status(500).json({ message: "Error Forgot password", error });
+  }
+});
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found!" });
+    }
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    user.password = newPassword;
+    user.otp = null;
+    await user.save();
+    res.json({ message: "Password Reset Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error Forgot password", error });
+  }
+});
+
 module.exports = router;

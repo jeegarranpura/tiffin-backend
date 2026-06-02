@@ -26,6 +26,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const newUser = await User.create(req.body);
+    const { otp, ...updatedUser } = newUser.toJSON();
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ message: "Error creating user", error });
@@ -40,7 +41,8 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     await user.update(req.body);
-    res.json(user);
+    const { otp, ...updatedUser } = user.toJSON();
+    res.json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: "Error updating user", error });
   }
