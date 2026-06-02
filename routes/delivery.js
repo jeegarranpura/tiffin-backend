@@ -74,7 +74,7 @@ router.post('/complete/:orderId', async (req, res) => {
       await Route.update({ status: 'completed' }, { where: { id: order.routeId } });
     }
 
-    const route  = await Route.find({ where: { id: order.routeId } });
+    const route  = await Route.findOne({ where: { id: order.routeId } });
     const users = await User.findAll({
       where: {
         role: ['admin', 'manager']

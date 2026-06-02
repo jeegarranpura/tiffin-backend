@@ -40,6 +40,10 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('admin', 'manager', 'packer', 'delivery_agent'),
     defaultValue: 'delivery_agent',
   },
+  otp: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  }
 }, {
   hooks: {
     beforeCreate: async (user) => {
