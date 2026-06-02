@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { Route, Order, Delivery } = require('../models');
+const { Route, Order, Delivery, User } = require('../models');
 const { Op } = require('sequelize');
+const { sendNotification } = require('../utils/firebaseServices');
+
+
 
 // Delivery Agent: Start Delivery
 router.post('/start/:routeId', async (req, res) => {
@@ -24,7 +27,21 @@ router.post('/start/:routeId', async (req, res) => {
       Delivery.create({ orderId: order.id, agentId, status: 'picked-up' })
     ));
 
+    const users = await User.findAll({
+      where: {
+        role: ['admin', 'manager']
+      }
+    });
+
+    users.filter((usr) => {
+      if (usr.fcmToken) {
+        const routeTitle = route.name;
+        await sendNotification(usr.fcmToken, `Delivery Started for ${routeTitle} the Route :`, 'Delivery Started...', usr);
+      }
+    })
+
     res.json({ message: 'Delivery started', route });
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -56,6 +73,20 @@ router.post('/complete/:orderId', async (req, res) => {
     if (pendingOrders === 0) {
       await Route.update({ status: 'completed' }, { where: { id: order.routeId } });
     }
+
+    const route  = await Route.find({ where: { id: order.routeId } });
+    const users = await User.findAll({
+      where: {
+        role: ['admin', 'manager']
+      }
+    });
+
+    users.filter((usr) => {
+      if (usr.fcmToken) {
+        const routeTitle = route.name;
+        await sendNotification(usr.fcmToken, `Order Delivered for ${routeTitle} the Route :`, 'Delivery Completed...', usr);
+      }
+    })
 
     res.json({ message: 'Delivery completed' });
   } catch (error) {

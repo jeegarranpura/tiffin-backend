@@ -201,7 +201,7 @@ router.put("/update-route-status/:id", async (req, res) => {
 
     console.log("data", route?.agent.fcmToken);
     if (route?.status === "ready" && route?.agent.fcmToken) {
-      sendNotification(route?.agent.fcmToken, route?.name, "Tiifin Route Is Ready for the Day!");
+      sendNotification(route?.agent.fcmToken, route?.name, "Tiifin Route Is Ready for the Day!", route?.agent);
     }
     res.json(route);
   } catch (error) {

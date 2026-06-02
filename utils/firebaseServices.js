@@ -11,7 +11,7 @@ const sendNotification = async (token, title, message, agent) => {
   const payload = {
     token: token,
     notification: {
-      title: `Delivery Route Ready  -  ${title}`,
+      title: title,
       body: message,
     },
     data: {
