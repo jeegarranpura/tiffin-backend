@@ -77,7 +77,7 @@ router.get("/delivery-agents", async (req, res) => {
 router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email: email, role: ['admin', 'manager'] } });
 
     if (!user) {
       res.status(404).json({ message: "User Not Found!" });
