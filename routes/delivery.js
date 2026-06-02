@@ -33,7 +33,7 @@ router.post('/start/:routeId', async (req, res) => {
       }
     });
 
-    users.filter((usr) => {
+    users.filter(async (usr) => {
       if (usr.fcmToken) {
         const routeTitle = route.name;
         await sendNotification(usr.fcmToken, `Delivery Started for ${routeTitle} the Route :`, 'Delivery Started...', usr);
@@ -81,7 +81,7 @@ router.post('/complete/:orderId', async (req, res) => {
       }
     });
 
-    users.filter((usr) => {
+    users.filter(async (usr) => {
       if (usr.fcmToken) {
         const routeTitle = route.name;
         await sendNotification(usr.fcmToken, `Order Delivered for ${routeTitle} the Route :`, 'Delivery Completed...', usr);
