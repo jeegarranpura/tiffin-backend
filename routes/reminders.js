@@ -28,9 +28,10 @@ const processPaymentReminders = async (useMailinator = true) => {
                 const adminMails = process.env.ADMIN_MAILS ? process.env.ADMIN_MAILS.split(',').map(m => m.trim()) : [];
                 const emailToUse = useMailinator ? [testEmail, ...adminMails] : customer.email;
                 const amount = 500;
-
-                const html = getPaymentReminderTemplate(customer.name, sub.endDate, amount);
-                await sendEmail(emailToUse, 'Payment Reminder - Your Tiffin Plan Expires Tomorrow', html);
+                if (process.env.NODE_ENV !== 'production') {
+                    const html = getPaymentReminderTemplate(customer.name, sub.endDate, amount);
+                    await sendEmail(emailToUse, 'Payment Reminder - Your Tiffin Plan Expires Tomorrow', html);
+                }
 
                 results.push({ customer: customer.name, email: emailToUse, status: 'sent' });
             }
