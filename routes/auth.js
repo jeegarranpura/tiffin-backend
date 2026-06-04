@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
+const { getOtpTemplete, sendEmail } = require('../utils/emailService');
 
 // const { loginRateLimit } = require('../utils/rateLimitService');
 
@@ -25,7 +26,7 @@ router.post('/login', async (req, res) => {
     // const rateLimitResult = await loginRateLimit.consume(req.ip);
 
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user || !(await user.comparePassword(password))) { 
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
@@ -92,10 +93,15 @@ router.post("/forgot-password", async (req, res) => {
     }
     const otp = Math.floor(100000 + Math.random() * 900000);
     await User.update({ otp }, { where: { email } });
-    res.send(200).json({
-      message: "Otp Generated Successfully",
+
+    const html = getOtpTemplete(otp, user.username);
+    await sendEmail(email, 'Password Reset Request', html);
+    console.log('[mail]  email send to user for otp')
+
+    res.status(200).json({
+      message: "Otp Generated and sent successfully, check mailbox",
     });
-  } catch (eroor) {
+  } catch (error) {
     res.status(500).json({ message: "Error Forgot password", error });
   }
 });

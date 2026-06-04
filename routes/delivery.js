@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Route, Order, Delivery, User } = require('../models');
+const { Route, Order, Delivery, User, Customer } = require('../models');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../utils/firebaseServices');
 
@@ -65,7 +65,12 @@ router.post('/complete/:orderId', async (req, res) => {
     await Order.update({ status: 'delivered', deliveryTime: new Date() }, { where: { id: orderId } });
 
     // Check if route is completed
-    const order = await Order.findByPk(orderId);
+    const order = await Order.findByPk(orderId,{
+      include: {
+        model: Customer,
+        as: 'Customer',
+      }
+    });
     const pendingOrders = await Order.count({
       where: { routeId: order.routeId, orderDate: order.orderDate, status: { [Op.ne]: 'delivered' } }
     });

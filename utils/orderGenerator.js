@@ -1,5 +1,12 @@
-const { Customer, Plan, Order, Subscription, SubscriptionSkip, Route } = require('../models');
-const { Op } = require('sequelize');
+const {
+  Customer,
+  Plan,
+  Order,
+  Subscription,
+  SubscriptionSkip,
+  Route,
+} = require("../models");
+const { Op } = require("sequelize");
 
 /**
  * Automatically generates daily orders for all active customers based on their plans.
@@ -7,32 +14,34 @@ const { Op } = require('sequelize');
  */
 async function generateDailyOrders(date = null) {
   try {
-    const targetDate = date || new Date().toISOString().split('T')[0];
-    console.log(`[OrderGenerator] Starting order generation for ${targetDate}...`);
+    const targetDate = date || new Date().toISOString().split("T")[0];
+    console.log(
+      `[OrderGenerator] Starting order generation for ${targetDate}...`,
+    );
 
     // 1. Find all active subscriptions for the target date
     const activeSubscriptions = await Subscription.findAll({
       where: {
         startDate: { [Op.lte]: targetDate },
         endDate: { [Op.gte]: targetDate },
-        status: 'active'
+        status: "active",
       },
       include: [
         {
           model: Customer,
           where: { isActive: true },
-          include: [Plan]
+          include: [Plan],
         },
-        { model: Plan }
-      ]
+        { model: Plan },
+      ],
     });
 
     // 2. Find all skip records for the target date
     const skips = await SubscriptionSkip.findAll({
-      where: { dateOfSkip: targetDate }
+      where: { dateOfSkip: targetDate },
     });
 
-    const skippedSubscriptionIds = skips.map(skip => skip.subscriptionId);
+    const skippedSubscriptionIds = skips.map((skip) => skip.subscriptionId);
 
     let createdCount = 0;
     let skippedCount = 0;
@@ -42,23 +51,27 @@ async function generateDailyOrders(date = null) {
       const plan = subscription.Plan || customer.Plan;
 
       if (skippedSubscriptionIds.includes(subscription.id)) {
-        console.log(`[OrderGenerator] Subscription ${subscription.id} set to skip for ${targetDate}. Skipping.`);
+        console.log(
+          `[OrderGenerator] Subscription ${subscription.id} set to skip for ${targetDate}. Skipping.`,
+        );
         skippedCount++;
         continue;
       }
 
       if (!plan) {
-        console.warn(`[OrderGenerator] Customer ${customer.id} has no plan assigned. Skipping.`);
+        console.warn(
+          `[OrderGenerator] Customer ${customer.id} has no plan assigned. Skipping.`,
+        );
         skippedCount++;
         continue;
       }
 
       const mealTimes = [];
-      if (plan.mealTime === 'Lunch' || plan.mealTime === 'Both') {
-        mealTimes.push('Lunch');
+      if (plan.mealTime === "Lunch" || plan.mealTime === "Both") {
+        mealTimes.push("Lunch");
       }
-      if (plan.mealTime === 'Dinner' || plan.mealTime === 'Both') {
-        mealTimes.push('Dinner');
+      if (plan.mealTime === "Dinner" || plan.mealTime === "Both") {
+        mealTimes.push("Dinner");
       }
 
       for (const time of mealTimes) {
@@ -70,8 +83,8 @@ async function generateDailyOrders(date = null) {
             mealTime: time,
           },
           defaults: {
-            type: customer.type === 'regular' ? 'monthly' : 'trial',
-            status: 'pending',
+            type: customer.type === "regular" ? "monthly" : "trial",
+            status: "pending",
             routeId: customer.routeId,
             priority: customer.priority,
           },
@@ -81,17 +94,39 @@ async function generateDailyOrders(date = null) {
           createdCount++;
           const route = await Route.findByPk(customer.routeId);
           if (route) {
-            route.status = 'pending';
+            route.status = "pending";
             await route.save();
+            console.warn(
+              `[OrderGenerator] Route - ${route.name} status updated.`,
+            );
           }
         }
       }
     }
 
-    console.log(`[OrderGenerator] Completed. Created: ${createdCount}, Skipped: ${skippedCount}`);
+    const orderWhere = { orderDate: targetDate };
+    const routes = await Route.findAll({
+      include: [
+        {
+          model: Order,
+          where: orderWhere,
+          required: false
+        },
+      ],
+    });
+    for (const route of routes) {
+      if (route.Orders.length <= 0) {
+        await Route.update({ status: "pending" }, { where: { id: route.id } });
+        console.warn(`[OrderGenerator] Route - ${route.name} status updated.`);
+      }
+    }
+
+    console.log(
+      `[OrderGenerator] Completed. Created: ${createdCount}, Skipped: ${skippedCount}`,
+    );
     return { createdCount, skippedCount };
   } catch (error) {
-    console.error('[OrderGenerator] Error generating orders:', error);
+    console.error("[OrderGenerator] Error generating orders:", error);
     throw error;
   }
 }
