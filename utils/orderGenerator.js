@@ -38,7 +38,13 @@ async function generateDailyOrders(date = null) {
 
     // 2. Find all skip records for the target date
     const skips = await SubscriptionSkip.findAll({
-      where: { dateOfSkip: targetDate },
+      where: { startDate: {
+        [Op.lte]: targetDate
+      },
+      endDate: {
+        [Op.gte]: targetDate
+      }
+     },
     });
 
     const skippedSubscriptionIds = skips.map((skip) => skip.subscriptionId);

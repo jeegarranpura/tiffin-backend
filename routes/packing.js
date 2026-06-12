@@ -66,6 +66,8 @@ router.post('/cancel-order', async (req, res) => {
     const skipSubscription = await SubscriptionSkip.create({
       customerId: customerId,
       dateOfSkip: date,
+      startDate: date,
+      endDate: date,
       reason: reason,
     });
     res.json({ message: 'Order cancelled successfully', skipSubscription });

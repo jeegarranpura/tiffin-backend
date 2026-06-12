@@ -19,6 +19,14 @@ const SubscriptionSkip = sequelize.define('SubscriptionSkip', {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
+  startDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  endDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
   reason: {
     type: DataTypes.TEXT,
     allowNull: true,

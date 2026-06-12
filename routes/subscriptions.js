@@ -154,9 +154,10 @@ router.put('/:id', async (req, res) => {
 // Create a Subscription Skip
 router.post('/skip', async (req, res) => {
   try {
-    const { subscriptionId, dateOfSkip, reason } = req.body;
+    const { subscriptionId, startDate, endDate, reason } = req.body;
+    const dateOfSkip = startDate
     const skip = await SubscriptionSkip.create({
-      subscriptionId, dateOfSkip, reason
+      subscriptionId, dateOfSkip, reason, startDate, endDate
     });
     res.status(201).json(skip);
   } catch (error) {
